@@ -23,7 +23,6 @@ import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.social.extension.config.support.HibernateJpaConnectionRepositoryConfigSupport;
-import org.springframework.social.extension.config.support.JpaConnectionRepositoryConfigSupport;
 
 /**
  * {@link ImportBeanDefinitionRegistrar} to enable {@link EnableHibernateJpaConnectionRepository} annotation.
@@ -43,7 +42,9 @@ class HibernateJpaConnectionRepositoryRegistrar extends HibernateJpaConnectionRe
 		String userConnectionDaoRef = attributes.getString("userConnectionDaoRef");
 		String encryptorRef = attributes.getString("encryptorRef");
 		String userIdSourceRef = attributes.getString("userIdSourceRef");
-		registerJpaConnectionRepositoryBeans(registry, connectionRepositoryId, usersConnectionRepositoryId, connectionFactoryLocatorRef, userConnectionDaoRef, encryptorRef, userIdSourceRef);
+		String connectionSignUpRef = attributes.getString("connectionSignUpRef");
+
+		registerJpaConnectionRepositoryBeans(registry, connectionRepositoryId, usersConnectionRepositoryId, connectionFactoryLocatorRef, userConnectionDaoRef, encryptorRef, userIdSourceRef,connectionSignUpRef);
 	}
 
 }

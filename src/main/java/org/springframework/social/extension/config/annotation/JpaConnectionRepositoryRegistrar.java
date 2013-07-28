@@ -42,7 +42,12 @@ class JpaConnectionRepositoryRegistrar extends JpaConnectionRepositoryConfigSupp
 		String jpaTemplateRef = attributes.getString("jpaTemplateRef");
 		String encryptorRef = attributes.getString("encryptorRef");
 		String userIdSourceRef = attributes.getString("userIdSourceRef");
-		registerJpaConnectionRepositoryBeans(registry, connectionRepositoryId, usersConnectionRepositoryId, connectionFactoryLocatorRef, jpaTemplateRef, encryptorRef, userIdSourceRef);
+		String connectionSignUpRef = attributes.getString("connectionSignUpRef");
+		registerJpaConnectionRepositoryBeans(registry, connectionRepositoryId, usersConnectionRepositoryId, connectionFactoryLocatorRef, jpaTemplateRef, encryptorRef, userIdSourceRef,connectionSignUpRef);
 	}
 
+	
+
+	
+	
 }

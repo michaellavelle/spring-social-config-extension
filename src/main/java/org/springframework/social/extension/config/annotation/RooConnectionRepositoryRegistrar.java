@@ -42,7 +42,9 @@ class RooConnectionRepositoryRegistrar extends RooConnectionRepositoryConfigSupp
 		String rooTemplateRef = attributes.getString("rooTemplateRef");
 		String encryptorRef = attributes.getString("encryptorRef");
 		String userIdSourceRef = attributes.getString("userIdSourceRef");
-		registerRooConnectionRepositoryBeans(registry, connectionRepositoryId, usersConnectionRepositoryId, connectionFactoryLocatorRef, rooTemplateRef, encryptorRef, userIdSourceRef);
+		String connectionSignUpRef = attributes.getString("connectionSignUpRef");
+
+		registerRooConnectionRepositoryBeans(registry, connectionRepositoryId, usersConnectionRepositoryId, connectionFactoryLocatorRef, rooTemplateRef, encryptorRef, userIdSourceRef,connectionSignUpRef);
 	}
 
 }

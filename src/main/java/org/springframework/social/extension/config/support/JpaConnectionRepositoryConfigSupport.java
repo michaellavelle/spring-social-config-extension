@@ -1,7 +1,7 @@
 package org.springframework.social.extension.config.support;
 
 /*
- * Copyright 2012 the original author or authors.
+ * Copyright 2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,76 +18,45 @@ package org.springframework.social.extension.config.support;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.aop.scope.ScopedProxyUtils;
 import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.beans.factory.config.BeanDefinitionHolder;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.social.config.support.AbstractConnectionRepositoryConfigSupport;
+import org.springframework.social.connect.jdbc.JdbcUsersConnectionRepository;
 import org.springframework.social.connect.jpa.JpaUsersConnectionRepository;
 
 /**
- * Support class providing methods for configuring a singleton {@link JpaUsersConnectionRepository} bean and a request-scoped RooConnectionRepository bean.
- * Used by JpaConnectionRepositoryRegistrar (for EnableJpaConnectionRepository) 
+ * Support class providing methods for configuring a singleton {@link JdbcUsersConnectionRepository} bean and a request-scoped JdbcConnectionRepository bean.
+ * Used by JpaConnectionRepositoryRegistrar (for EnableJpaConnectionRepository) and JpaConnectionRepositoryBeanDefinitionParser for XML configuration.
  * @author Michael Lavelle
  */
-public abstract class JpaConnectionRepositoryConfigSupport {
+public abstract class JpaConnectionRepositoryConfigSupport extends AbstractConnectionRepositoryConfigSupport {
 
 	private final static Log logger = LogFactory.getLog(JpaConnectionRepositoryConfigSupport.class);
 
 	public BeanDefinition registerJpaConnectionRepositoryBeans(BeanDefinitionRegistry registry, String connectionRepositoryId, String usersConnectionRepositoryId, 
-			String connectionFactoryLocatorRef, String jpaTemplateRef, String encryptorRef, String userIdSourceRef) {
-		registerUsersConnectionRepositoryBeanDefinition(registry, usersConnectionRepositoryId, connectionFactoryLocatorRef, jpaTemplateRef, encryptorRef);
-		registerUserIdBeanDefinition(registry, userIdSourceRef);
-		return registerConnectionRepository(registry, usersConnectionRepositoryId, connectionRepositoryId);		
+			String connectionFactoryLocatorRef, String jpaTemplateRef, String encryptorRef, String userIdSourceRef, String connectionSignUpRef) {
+		registerUsersConnectionRepositoryBeanDefinition(registry, usersConnectionRepositoryId, connectionFactoryLocatorRef, jpaTemplateRef, encryptorRef, connectionSignUpRef);
+		return registerConnectionRepository(registry, usersConnectionRepositoryId, connectionRepositoryId, userIdSourceRef);		
 	}
 	
 	
 	private BeanDefinition registerUsersConnectionRepositoryBeanDefinition(BeanDefinitionRegistry registry, String usersConnectionRepositoryId, 
-			String connectionFactoryLocatorRef, String jpaTemplateRef, String encryptorRef) {
+			String connectionFactoryLocatorRef, String jpaTemplateRef, String encryptorRef, String connectionSignUpRef) {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Registering JpaUsersConnectionRepository bean");
 		}				
-
-		BeanDefinition usersConnectionRepositoryBD = BeanDefinitionBuilder.genericBeanDefinition(JpaUsersConnectionRepository.class)
+		BeanDefinitionBuilder usersConnectionRepositoryBeanBuilder = BeanDefinitionBuilder.genericBeanDefinition(JpaUsersConnectionRepository.class)
 				.addConstructorArgReference(jpaTemplateRef)
 				.addConstructorArgReference(connectionFactoryLocatorRef)
-				.addConstructorArgReference(encryptorRef)
-				.getBeanDefinition();
+				.addConstructorArgReference(encryptorRef);
+		if (connectionSignUpRef != null && connectionSignUpRef.length() > 0) {
+			usersConnectionRepositoryBeanBuilder.addPropertyReference("connectionSignUp", connectionSignUpRef);
+		}
+		BeanDefinition usersConnectionRepositoryBD = usersConnectionRepositoryBeanBuilder.getBeanDefinition();
 		BeanDefinition scopedProxyBean = decorateWithScopedProxy(usersConnectionRepositoryId, usersConnectionRepositoryBD, registry);
 		registry.registerBeanDefinition(usersConnectionRepositoryId, scopedProxyBean);
 		return scopedProxyBean;
 	}
-	
-	// TODO: Kinda hackish...pushes a request-scoped String containing the name retrieved from the UserIdSource into the context.
-	private BeanDefinition registerUserIdBeanDefinition(BeanDefinitionRegistry registry, String userIdSourceRef) {
-		BeanDefinition userIdStringDB = BeanDefinitionBuilder.genericBeanDefinition().getBeanDefinition();
-		userIdStringDB.setFactoryBeanName(userIdSourceRef);
-		userIdStringDB.setFactoryMethodName("getUserId");
-		userIdStringDB.setScope("request");
-		registry.registerBeanDefinition(USER_ID_STRING_ID, userIdStringDB);
-		return userIdStringDB;
-	}
-	
-
-	private BeanDefinition registerConnectionRepository(BeanDefinitionRegistry registry, String usersConnectionRepositoryId, String connectionRepositoryId) {
-		if (logger.isDebugEnabled()) {
-			logger.debug("Registering JpaConnectionRepository bean");
-		}		
-		BeanDefinition connectionRepositoryBD = BeanDefinitionBuilder.genericBeanDefinition().addConstructorArgReference(USER_ID_STRING_ID).getBeanDefinition();
-		connectionRepositoryBD.setFactoryBeanName(usersConnectionRepositoryId);
-		connectionRepositoryBD.setFactoryMethodName(CREATE_CONNECTION_REPOSITORY_METHOD_NAME);
-		connectionRepositoryBD.setScope("request");
-		registry.registerBeanDefinition(connectionRepositoryId, decorateWithScopedProxy(connectionRepositoryId, connectionRepositoryBD, registry));
-		return connectionRepositoryBD;
-	}
-
-	private BeanDefinition decorateWithScopedProxy(String beanName, BeanDefinition beanDefinition, BeanDefinitionRegistry registry) {
-		BeanDefinitionHolder beanDefinitionHolder = new BeanDefinitionHolder(beanDefinition, beanName);
-		return ScopedProxyUtils.createScopedProxy(beanDefinitionHolder, registry, false).getBeanDefinition();
-	}
-
-	private static final String USER_ID_STRING_ID = "__userIdString";
-
-	private static final String CREATE_CONNECTION_REPOSITORY_METHOD_NAME = "createConnectionRepository";
 
 }

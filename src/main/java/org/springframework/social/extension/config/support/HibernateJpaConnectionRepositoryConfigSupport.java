@@ -13,13 +13,13 @@ public abstract class HibernateJpaConnectionRepositoryConfigSupport extends
 			BeanDefinitionRegistry registry, String connectionRepositoryId,
 			String usersConnectionRepositoryId,
 			String connectionFactoryLocatorRef, String userConnectionDaoRef,
-			String encryptorRef, String userIdSourceRef) {
+			String encryptorRef, String userIdSourceRef,String connectionSignUpRef ) {
 		
 		registerDefaultUserConnectionDaoIfNotRegistered(registry,userConnectionDaoRef);
 		return super.registerJpaConnectionRepositoryBeans(registry,
 				connectionRepositoryId, usersConnectionRepositoryId,
 				connectionFactoryLocatorRef, userConnectionDaoRef, encryptorRef,
-				userIdSourceRef);
+				userIdSourceRef,connectionSignUpRef);
 	}
 
 	// Need to check if already registered, as component scanning may have imported the default RooTemplate

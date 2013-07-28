@@ -1,7 +1,7 @@
 package org.springframework.social.extension.config.support;
 
 /*
- * Copyright 2012 the original author or authors.
+ * Copyright 2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,89 +18,46 @@ package org.springframework.social.extension.config.support;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.aop.scope.ScopedProxyUtils;
 import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.beans.factory.config.BeanDefinitionHolder;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
-import org.springframework.social.connect.roo.RooUserConnectionTemplate;
+import org.springframework.social.config.support.AbstractConnectionRepositoryConfigSupport;
+import org.springframework.social.connect.jdbc.JdbcUsersConnectionRepository;
+import org.springframework.social.connect.jpa.JpaUsersConnectionRepository;
 import org.springframework.social.connect.roo.RooUsersConnectionRepository;
 
 /**
- * Support class providing methods for configuring a singleton {@link RooUsersConnectionRepository} bean and a request-scoped RooConnectionRepository bean.
- * Used by RooConnectionRepositoryRegistrar (for EnableRooConnectionRepository) 
+ * Support class providing methods for configuring a singleton {@link JdbcUsersConnectionRepository} bean and a request-scoped JdbcConnectionRepository bean.
+ * Used by JpaConnectionRepositoryRegistrar (for EnableJpaConnectionRepository) and JpaConnectionRepositoryBeanDefinitionParser for XML configuration.
  * @author Michael Lavelle
  */
-public abstract class RooConnectionRepositoryConfigSupport {
+public abstract class RooConnectionRepositoryConfigSupport extends AbstractConnectionRepositoryConfigSupport {
 
 	private final static Log logger = LogFactory.getLog(RooConnectionRepositoryConfigSupport.class);
 
 	public BeanDefinition registerRooConnectionRepositoryBeans(BeanDefinitionRegistry registry, String connectionRepositoryId, String usersConnectionRepositoryId, 
-			String connectionFactoryLocatorRef, String rooTemplateRef, String encryptorRef, String userIdSourceRef) {
-		registerUsersConnectionRepositoryBeanDefinition(registry, usersConnectionRepositoryId, connectionFactoryLocatorRef, rooTemplateRef, encryptorRef);
-		registerUserIdBeanDefinition(registry, userIdSourceRef);
-		registerDefaultRooTemplateIfNotRegistered(registry,rooTemplateRef);
-		return registerConnectionRepository(registry, usersConnectionRepositoryId, connectionRepositoryId);		
+			String connectionFactoryLocatorRef, String rooTemplateRef, String encryptorRef, String userIdSourceRef, String connectionSignUpRef) {
+		registerUsersConnectionRepositoryBeanDefinition(registry, usersConnectionRepositoryId, connectionFactoryLocatorRef, rooTemplateRef, encryptorRef, connectionSignUpRef);
+		return registerConnectionRepository(registry, usersConnectionRepositoryId, connectionRepositoryId, userIdSourceRef);		
 	}
 	
 	
 	private BeanDefinition registerUsersConnectionRepositoryBeanDefinition(BeanDefinitionRegistry registry, String usersConnectionRepositoryId, 
-			String connectionFactoryLocatorRef, String rooTemplateRef, String encryptorRef) {
+			String connectionFactoryLocatorRef, String rooTemplateRef, String encryptorRef, String connectionSignUpRef) {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Registering RooUsersConnectionRepository bean");
 		}				
-
-		BeanDefinition usersConnectionRepositoryBD = BeanDefinitionBuilder.genericBeanDefinition(RooUsersConnectionRepository.class)
+		BeanDefinitionBuilder usersConnectionRepositoryBeanBuilder = BeanDefinitionBuilder.genericBeanDefinition(RooUsersConnectionRepository.class)
 				.addConstructorArgReference(rooTemplateRef)
 				.addConstructorArgReference(connectionFactoryLocatorRef)
-				.addConstructorArgReference(encryptorRef)
-				.getBeanDefinition();
+				.addConstructorArgReference(encryptorRef);
+		if (connectionSignUpRef != null && connectionSignUpRef.length() > 0) {
+			usersConnectionRepositoryBeanBuilder.addPropertyReference("connectionSignUp", connectionSignUpRef);
+		}
+		BeanDefinition usersConnectionRepositoryBD = usersConnectionRepositoryBeanBuilder.getBeanDefinition();
 		BeanDefinition scopedProxyBean = decorateWithScopedProxy(usersConnectionRepositoryId, usersConnectionRepositoryBD, registry);
 		registry.registerBeanDefinition(usersConnectionRepositoryId, scopedProxyBean);
 		return scopedProxyBean;
 	}
-	
-	// TODO: Kinda hackish...pushes a request-scoped String containing the name retrieved from the UserIdSource into the context.
-	private BeanDefinition registerUserIdBeanDefinition(BeanDefinitionRegistry registry, String userIdSourceRef) {
-		BeanDefinition userIdStringDB = BeanDefinitionBuilder.genericBeanDefinition().getBeanDefinition();
-		userIdStringDB.setFactoryBeanName(userIdSourceRef);
-		userIdStringDB.setFactoryMethodName("getUserId");
-		userIdStringDB.setScope("request");
-		registry.registerBeanDefinition(USER_ID_STRING_ID, userIdStringDB);
-		return userIdStringDB;
-	}
-	
-	// Need to check if already registered, as component scanning may have imported the default RooTemplate
-	// from spring-social-roo-connectionrepository
-	private BeanDefinition registerDefaultRooTemplateIfNotRegistered(BeanDefinitionRegistry registry, String rooTemplateRef)
-	{
-		if (!registry.containsBeanDefinition(rooTemplateRef))
-		{
-			BeanDefinition rooTemplateDB = BeanDefinitionBuilder.genericBeanDefinition(RooUserConnectionTemplate.class).getBeanDefinition();
-			registry.registerBeanDefinition(rooTemplateRef, rooTemplateDB);
-		}
-		return null;
-	}
-
-	private BeanDefinition registerConnectionRepository(BeanDefinitionRegistry registry, String usersConnectionRepositoryId, String connectionRepositoryId) {
-		if (logger.isDebugEnabled()) {
-			logger.debug("Registering RooConnectionRepository bean");
-		}		
-		BeanDefinition connectionRepositoryBD = BeanDefinitionBuilder.genericBeanDefinition().addConstructorArgReference(USER_ID_STRING_ID).getBeanDefinition();
-		connectionRepositoryBD.setFactoryBeanName(usersConnectionRepositoryId);
-		connectionRepositoryBD.setFactoryMethodName(CREATE_CONNECTION_REPOSITORY_METHOD_NAME);
-		connectionRepositoryBD.setScope("request");
-		registry.registerBeanDefinition(connectionRepositoryId, decorateWithScopedProxy(connectionRepositoryId, connectionRepositoryBD, registry));
-		return connectionRepositoryBD;
-	}
-
-	private BeanDefinition decorateWithScopedProxy(String beanName, BeanDefinition beanDefinition, BeanDefinitionRegistry registry) {
-		BeanDefinitionHolder beanDefinitionHolder = new BeanDefinitionHolder(beanDefinition, beanName);
-		return ScopedProxyUtils.createScopedProxy(beanDefinitionHolder, registry, false).getBeanDefinition();
-	}
-
-	private static final String USER_ID_STRING_ID = "__userIdString";
-
-	private static final String CREATE_CONNECTION_REPOSITORY_METHOD_NAME = "createConnectionRepository";
 
 }

@@ -16,8 +16,8 @@
 	<version>1.1.0-SNAPSHOT</version>
 	<name>Spring Social Config Extension</name>
 	<properties>
-		<spring.social.version>1.1.0.BUILD-SNAPSHOT</spring.social.version>
-		<spring.version>3.1.1.RELEASE</spring.version>
+		<spring.social.version>1.1.0.M3</spring.social.version>
+		<spring.version>3.2.3.RELEASE</spring.version>
 		<spring.security.crypto.version>3.1.0.RELEASE</spring.security.crypto.version>
 	</properties>
 	<distributionManagement>
@@ -41,6 +41,11 @@
             <name>Spring Maven Snapshot Repository</name>
             <url>http://maven.springframework.org/snapshot</url>
         </repository>
+         <repository>
+            <id>spring-maven-milestone</id>
+            <name>Spring Maven Milestone Repository</name>
+            <url>http://maven.springframework.org/milestone</url>
+        </repository>	
         <repository>
 	        	<id>opensourceagility-snapshots</id>
 	        	<url>http://repo.opensourceagility.com/releases</url>
@@ -52,6 +57,11 @@
 			<artifactId>spring-social-core</artifactId>
 			<version>${spring.social.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.social</groupId>
+			<artifactId>spring-social-config</artifactId>
+			<version>${spring.social.version}</version>
+		</dependency>
 			<dependency>
 			<groupId>commons-logging</groupId>
 			<artifactId>commons-logging</artifactId>
@@ -60,12 +70,12 @@
 		<dependency>
 			<groupId>org.springframework.social</groupId>
 				<artifactId>spring-social-core-extension</artifactId>
-				<version>1.0.2-SNAPSHOT</version>
+				<version>1.1.0-SNAPSHOT</version>
 		</dependency>
 			<dependency>
 			<groupId>org.springframework.social</groupId>
 				<artifactId>spring-social-roo-connectionrepository</artifactId>
-				<version>1.0.2-SNAPSHOT</version>
+				<version>1.1.0-SNAPSHOT</version>
 		</dependency>
 		 <dependency>
         <groupId>org.springframework.social</groupId>

@@ -40,7 +40,8 @@ class InMemoryConnectionRepositoryRegistrar extends InMemoryConnectionRepository
 		String usersConnectionRepositoryId = attributes.getString("usersConnectionRepositoryId");
 		String connectionFactoryLocatorRef = attributes.getString("connectionFactoryLocatorRef");
 		String userIdSourceRef = attributes.getString("userIdSourceRef");
-		registerInMemoryConnectionRepositoryBeans(registry, connectionRepositoryId, usersConnectionRepositoryId, connectionFactoryLocatorRef, userIdSourceRef);
+		String connectionSignUpRef = attributes.getString("connectionSignUpRef");
+		registerInMemoryConnectionRepositoryBeans(registry, connectionRepositoryId, usersConnectionRepositoryId, connectionFactoryLocatorRef, userIdSourceRef,connectionSignUpRef);
 	}
 
 }
